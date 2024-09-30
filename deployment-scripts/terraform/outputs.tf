@@ -89,3 +89,39 @@ output "upload_function_site_credential" {
   }
   sensitive = true
 }
+
+
+# Output the generated password (marked as sensitive)
+output "db_admin_password" {
+  value     = random_password.db_password.result
+  sensitive = true
+}
+
+# Output the connection string
+output "postgresql_connection_string" {
+  value     = "postgresql://${azurerm_postgresql_flexible_server.translator_db.administrator_login}:${random_password.db_password.result}@${azurerm_postgresql_flexible_server.translator_db.fqdn}:5432/${azurerm_postgresql_flexible_server_database.citus_db.name}?sslmode=require"
+  sensitive = true
+}
+
+# Output the server name
+output "postgresql_server_name" {
+  value = azurerm_postgresql_flexible_server.translator_db.name
+}
+
+# Output the server ID
+output "postgresql_server_id" {
+  value = azurerm_postgresql_flexible_server.translator_db.id
+}
+
+# Output the database name
+output "postgresql_database_name" {
+  value = azurerm_postgresql_flexible_server_database.citus_db.name
+}
+
+output "postgresql_fqdn" {
+  value = azurerm_postgresql_flexible_server.translator_db.fqdn
+}
+
+output "postgresql_server_admin" {
+  value = var.postgres_administrator_login
+}

@@ -24,6 +24,7 @@ locals {
 }
 
 resource "azurerm_static_web_app" "webapp" {
+  depends_on = [azurerm_linux_function_app.upload_function]
   location            = local.azure_static_web_region
   name                = "${local.name_prefix}-webapp"
   resource_group_name = azurerm_resource_group.rg.name
@@ -39,6 +40,7 @@ resource "azurerm_static_web_app" "webapp" {
 }
 #
 resource "github_actions_secret" "webapp_api_key" {
+  depends_on = [azurerm_static_web_app.webapp]
   repository      = local.github_repository
   secret_name     = local.api_token_var
   plaintext_value = azurerm_static_web_app.webapp.api_key
@@ -47,6 +49,7 @@ resource "github_actions_secret" "webapp_api_key" {
 #
 # # This will cause github provider crash, until https://github.com/integrations/terraform-provider-github/pull/732 is merged.
 resource "github_repository_file" "foo" {
+  depends_on = [github_actions_secret.webapp_api_key]
   repository = local.github_repository
   branch     = "main"
   file       = ".github/workflows/azure-ai-static-web-app.yml"

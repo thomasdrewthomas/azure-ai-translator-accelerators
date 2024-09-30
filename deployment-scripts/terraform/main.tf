@@ -30,6 +30,7 @@ resource "azurerm_storage_container" "container" {
 
 
 data "azurerm_storage_account_sas" "storage_sas_token" {
+  depends_on = [azurerm_storage_account.storage]
   connection_string = azurerm_storage_account.storage.primary_connection_string
   https_only        = true
   signed_version    = "2017-07-29"

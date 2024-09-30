@@ -24,7 +24,7 @@ resource "azurerm_service_plan" "functions" {
   resource_group_name = azurerm_resource_group.rg.name
   location            = azurerm_resource_group.rg.location
   os_type             = "Linux"
-  sku_name            = "S1"
+  sku_name            = "B1"
   tags                = local.default_tags
 }
 
@@ -58,7 +58,7 @@ resource "azurerm_linux_function_app" "upload_function" {
     WEBSITE_RUN_FROM_PACKAGE       = "1"
     AZURE_CONNECTION_STRING        = azurerm_storage_account.storage.primary_connection_string
     AZURE_STORAGE_ACCOUNT          = azurerm_storage_account.storage.name
-    SAS_TOKEN = ""#data.azurerm_storage_account_sas.storage_sas_token.sas
+    SAS_TOKEN                      = data.azurerm_storage_account_sas.storage_sas_token.sas
     CONTAINER_NAME                 = var.storage_container_name
     DB_HOST                        = azurerm_postgresql_flexible_server.translator_db.fqdn
     DB_PORT                        = 5432
@@ -134,7 +134,7 @@ resource "azurerm_linux_function_app" "translate_function" {
     storage_name                     = azurerm_storage_account.storage.name
     AZURE_CONNECTION_STRING          = azurerm_storage_account.storage.primary_connection_string
     AZURE_STORAGE_ACCOUNT            = azurerm_storage_account.storage.name
-    SAS_TOKEN = ""#data.azurerm_storage_account_sas.storage_sas_token.sas
+    SAS_TOKEN                        = data.azurerm_storage_account_sas.storage_sas_token.sas
     CONTAINER_NAME                   = var.storage_container_name
     BlobStorageConnectionString      = azurerm_storage_account.storage.primary_connection_string
     AzureWebJobsFeatureFlags         = "EnableWorkerIndexing"
