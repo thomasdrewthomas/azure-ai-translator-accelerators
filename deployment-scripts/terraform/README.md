@@ -5,10 +5,11 @@
 2. [Prerequisites](#prerequisites)
 3. [Forking the Repository](#forking-the-repository)
 4. [Setting Up GitHub Token for CI/CD](#setting-up-github-token-for-cicd)
-5. [Deployment Steps](#deployment-steps)
-6. [Testing and Validation](#testing-and-validation)
-7. [Additional Resources](#additional-resources)
-8. [Security Enhancements](#security-enhancements)
+5. [Terraform State Management](#terraform-state-management)
+6. [Deployment Steps](#deployment-steps)
+7. [Testing and Validation](#testing-and-validation)
+8. [Additional Resources](#additional-resources)
+9. [Security Enhancements](#security-enhancements)
 
 ## Overview
 This repository contains Terraform code to deploy an Azure-based AI Translation solution using a simple, automated process. Additionally, we use GitHub Actions to facilitate CI/CD for deploying the app.
@@ -18,6 +19,8 @@ Before you start, ensure you have:
 - [Terraform](https://www.terraform.io/downloads.html) installed locally.
 - Access to an Azure subscription.
 - A GitHub account and personal access token with necessary permissions.
+- An Azure storage account and container for Terraform state management (see [Terraform State Management](#terraform-state-management) section).
+
 
 ## Forking the Repository
 To begin, fork this repository to your own GitHub account:
@@ -42,6 +45,52 @@ Since we use GitHub Actions to deploy the application, you’ll need to generate
    - `workflow`
 5. Generate the token and save it somewhere secure (you won’t be able to view it again).
 
+
+
+## Terraform State Management
+
+### Creating Azure Storage for Terraform State
+
+To manage Terraform state remotely, you need to create an Azure storage account and container. Follow these steps:
+
+1. Log in to the Azure Portal.
+2. Create a new resource group (e.g., "terraform").
+3. Create a new storage account in this resource group.
+4. Within the storage account, create a new container named "tfstate".
+
+You can do this using the Azure CLI:
+
+```bash
+az group create --name terraform --location eastus
+az storage account create --name terraform9999 --resource-group terraform --sku Standard_LRS
+az storage container create --name tfstate --account-name terraform9999
+```
+
+### Configuring Terraform Backend
+
+The `backend.tf` file in this repository is pre-configured to use Azure storage for state management:
+
+```hcl
+terraform {
+  backend "azurerm" {
+    resource_group_name  = "terraform"
+    storage_account_name = "terraform9999"
+    container_name       = "tfstate"
+    key                  = "terraform.tfstate"
+    use_azuread_auth     = true
+  }
+}
+```
+
+Make sure to update the `storage_account_name` to match the name of the storage account you created.
+
+### Alternative State Management Options
+
+1. **Local State Management**: For demo purposes or local development, you can manage the state locally. To do this, simply remove or comment out the `backend` block in `backend.tf`.
+
+2. **Other Terraform Backends**: Terraform supports various backend types. You can modify `backend.tf` to use a different backend, such as S3, GCS, or Terraform Cloud. Refer to the [Terraform Backend Configuration](https://www.terraform.io/docs/language/settings/backends/index.html) documentation for more options.
+
+Adjust your backend configuration based on your specific needs and security requirements.
 
 ## Deployment Steps
 
