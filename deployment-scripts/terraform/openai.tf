@@ -20,7 +20,7 @@ resource "azurerm_cognitive_account" "openai" {
 }
 
 resource "azurerm_cognitive_deployment" "gpt_4o" {
-  for_each               = {for deployment in var.openai_deployments : deployment.name => deployment}
+  for_each               = { for deployment in var.openai_deployments : deployment.name => deployment }
   cognitive_account_id   = azurerm_cognitive_account.openai.id
   name                   = each.key
   version_upgrade_option = "OnceNewDefaultVersionAvailable"

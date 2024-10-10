@@ -5,7 +5,7 @@ resource "random_password" "db_password" {
   override_special = "!#$%&*()-_=+[]{}<>:?"
 }
 resource "azurerm_postgresql_flexible_server" "translator_db" {
-  name     = "${local.name_prefix}-transaltor-db"
+  name     = "${local.name_prefix}-transaltor-db-${var.random_string}"
   location = azurerm_resource_group.rg.location
   resource_group_name = azurerm_resource_group.rg.name
 

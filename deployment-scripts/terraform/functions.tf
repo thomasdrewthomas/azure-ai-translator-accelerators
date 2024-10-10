@@ -29,8 +29,8 @@ resource "azurerm_service_plan" "functions" {
 }
 
 resource "azurerm_linux_function_app" "upload_function" {
-  depends_on = [azurerm_postgresql_flexible_server_database.citus_db]
-  name                       = "${local.name_prefix}-${var.function_app_name_upload}"
+  depends_on                 = [azurerm_postgresql_flexible_server_database.citus_db]
+  name                       = "${local.name_prefix}-${var.function_app_name_upload}-${random_string.unique.result}"
   location                   = azurerm_resource_group.rg.location
   resource_group_name        = azurerm_resource_group.rg.name
   service_plan_id            = azurerm_service_plan.functions.id
@@ -106,7 +106,7 @@ resource "azurerm_linux_function_app" "translate_function" {
     azurerm_cognitive_account.translator,
     azurerm_cognitive_account.openai
   ]
-  name                       = "${local.name_prefix}-${var.function_app_name_translate}"
+  name                       = "${local.name_prefix}-${var.function_app_name_translate}-${random_string.unique.result}"
   location                   = azurerm_resource_group.rg.location
   resource_group_name        = azurerm_resource_group.rg.name
   service_plan_id            = azurerm_service_plan.functions.id
