@@ -10,13 +10,13 @@ from environment_variables import (
     OPENAI_API_KEY, OPENAI_API_ENDPOINT
 )
 
-def get_gpt_response(prompt_text, SYSTEM_PROMPT, FEW_SHOT_EXAMPLES, CHAT_PARAMETERS):
+def get_gpt_response(prompt_text, system_prompt, FEW_SHOT_EXAMPLES, CHAT_PARAMETERS):
     """
     Sends the extracted text to the GPT model and retrieves the response.
 
     Args:
         prompt_text (str): The text to send to the GPT model.
-        SYSTEM_PROMPT (str): The system prompt to guide the GPT model.
+        system_prompt (str): The system prompt to guide the GPT model.
         FEW_SHOT_EXAMPLES (list): Examples to help guide the GPT model.
         CHAT_PARAMETERS (dict): Parameters for the GPT model.
 
@@ -31,7 +31,7 @@ def get_gpt_response(prompt_text, SYSTEM_PROMPT, FEW_SHOT_EXAMPLES, CHAT_PARAMET
     )
 
     messages = [
-        {"role": "system", "content": SYSTEM_PROMPT},
+        {"role": "system", "content": system_prompt},
         {"role": "user", "content": prompt_text},
     ]
     for example in FEW_SHOT_EXAMPLES:

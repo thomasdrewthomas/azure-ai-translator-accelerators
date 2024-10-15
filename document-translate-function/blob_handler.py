@@ -13,7 +13,7 @@ from environment_variables import AZURE_STORAGE_ACCOUNT, SAS_TOKEN
 # Construct the Blob service client
 blob_service_client = BlobServiceClient(
     account_url=f"https://{AZURE_STORAGE_ACCOUNT}.blob.core.windows.net",
-    credential=SAS_TOKEN,
+    credential={SAS_TOKEN},
 )
 
 
@@ -33,7 +33,9 @@ def validate_source_url(source_url):
         if response.status_code == 200:
             logging.info("Source file exists")
             return True
-        logging.error("Source file does not exist. Status code: %s", response.status_code)
+        logging.error(
+            "Source file does not exist. Status code: %s", response.status_code
+        )
         return False
     except requests.RequestException as e:
         logging.error("Error validating source URL: %s", e)
@@ -62,9 +64,7 @@ def upload_to_blob(
         credential=token,
     )
     blob_path = f"{blob_directory}/{file_name}"
-    blob_client = blob_service.get_blob_client(
-        container=container, blob=blob_path
-    )
+    blob_client = blob_service.get_blob_client(container=container, blob=blob_path)
 
     logging.info("Uploading CSV to Azure Blob Storage: %s", blob_path)
     try:
@@ -75,6 +75,8 @@ def upload_to_blob(
     logging.info("Upload successful.")
 
     # Construct and return the full URL for the uploaded blob
-    glossary_url = (f"https://{storage_account}.blob.core.windows.net/"
-                    f"{container}/{blob_path}?{token}")
+    glossary_url = (
+        f"https://{storage_account}.blob.core.windows.net/"
+        f"{container}/{blob_path}{token}"
+    )
     return glossary_url

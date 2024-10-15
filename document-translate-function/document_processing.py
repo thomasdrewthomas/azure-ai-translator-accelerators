@@ -81,7 +81,7 @@ def process_and_upload_data(
 
 
 def process_file(
-    file_name, source_url, SYSTEM_PROMPT, FEW_SHOT_EXAMPLES, CHAT_PARAMETERS
+    file_name, source_url, system_prompt, FEW_SHOT_EXAMPLES, CHAT_PARAMETERS
 ):
     """
     Processes the input file, sends its content to the GPT model, and extracts relevant text.
@@ -89,7 +89,7 @@ def process_file(
     Args:
         file_name (str): The name of the file to process.
         source_url (str): The URL of the source file.
-        SYSTEM_PROMPT (str): The system prompt to guide the GPT model.
+        system_prompt (str): The system prompt to guide the GPT model.
         FEW_SHOT_EXAMPLES (list): Examples to help guide the GPT model.
         CHAT_PARAMETERS (dict): Parameters for the GPT model.
 
@@ -105,7 +105,7 @@ def process_file(
         logging.error("Unsupported file type: %s", file_name)
         raise ValueError("Unsupported file type. URL must end with .docx or .pdf")
 
-    response = get_gpt_response(text, SYSTEM_PROMPT, FEW_SHOT_EXAMPLES, CHAT_PARAMETERS)
+    response = get_gpt_response(text, system_prompt, FEW_SHOT_EXAMPLES, CHAT_PARAMETERS)
     logging.info("get_gpt_response: %s", response)
 
     return response

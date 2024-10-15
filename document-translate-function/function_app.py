@@ -37,7 +37,7 @@ logging.basicConfig(
 
 @app.blob_trigger(
     arg_name="myblob",
-    path="translation-service/landing-zone/{name}",
+    path="documents/landing-zone/{name}",
     connection="BlobStorageConnectionString",
 )
 def az_ai_translate_document(myblob: func.InputStream):
@@ -56,7 +56,7 @@ def az_ai_translate_document(myblob: func.InputStream):
     Args:
         myblob (func.InputStream): Input stream triggered by the blob event.
     """
-    logging.info("Blob trigger function processing blob: %s", myblob.name)    
+    logging.info("Blob trigger function processing blob: %s", myblob.name)
 
     file_name = myblob.name.split("/")[-1]
     logging.info("Extracted file name: %s", file_name)
@@ -84,7 +84,7 @@ def process_document(file_name):
     encoded_file_name = urllib.parse.quote(file_name)
     source_url = (
         f"https://{AZURE_STORAGE_ACCOUNT}.blob.core.windows.net/"
-        f"{CONTAINER_NAME}/{UPLOAD_PREFIX}/{encoded_file_name}?{SAS_TOKEN}"
+        f"{CONTAINER_NAME}/{UPLOAD_PREFIX}/{encoded_file_name}{SAS_TOKEN}"
     )
     logging.info("Source URL: %s", source_url)
     logging.info("Encoded file name: %s", encoded_file_name)
@@ -95,21 +95,27 @@ def process_document(file_name):
         return
 
     target_urls = get_target_urls(file_name)
-    target_url = target_urls['docx'] if file_name.endswith(".docx") else target_urls['pdf']
+    target_url = (
+        target_urls["docx"] if file_name.endswith(".docx") else target_urls["pdf"]
+    )
     logging.info("Target URL: %s", target_url)
-
-    response = process_file(file_name, source_url, SYSTEM_PROMPT, FEW_SHOT_EXAMPLES, CHAT_PARAMETERS)
-
-    parsed_response = parse_response(response)
-    logging.info("Text extracted from file: %s", parsed_response)
-
-    logging.info("File processing completed for: %s", file_name)
 
     metadata_results = database_handler.fetch_metadata_text(file_name)
     logging.info("Metadata results: %s", metadata_results)
 
     exclusion_text = metadata_results["exclusionTexts"]
     logging.info("Exclusion text: %s", exclusion_text)
+
+    system_prompt = metadata_results["prompt_text"]
+
+    response = process_file(
+        file_name, source_url, system_prompt, FEW_SHOT_EXAMPLES, CHAT_PARAMETERS
+    )
+
+    parsed_response = parse_response(response)
+    logging.info("Text extracted from file: %s", parsed_response)
+
+    logging.info("File processing completed for: %s", file_name)
 
     merged_response = parsed_response + exclusion_text
     logging.info("Merged response: %s", merged_response)
@@ -131,7 +137,14 @@ def process_document(file_name):
     glossary_content = json.dumps(json_list, ensure_ascii=False, indent=2)
     logging.info("Glossary content: %s", glossary_content)
 
-    start_translation_job(file_name, source_url, target_url, glossary_url, metadata_results, glossary_content)
+    start_translation_job(
+        file_name,
+        source_url,
+        target_url,
+        glossary_url,
+        metadata_results,
+        glossary_content,
+    )
 
 
 def get_target_urls(file_name):
@@ -158,17 +171,19 @@ def get_target_urls(file_name):
 
     target_url_docx = (
         f"https://{AZURE_STORAGE_ACCOUNT}.blob.core.windows.net/"
-        f"{CONTAINER_NAME}/{TRANSLATION_OUTPUT_PREFIX}/{encoded_target_file_name_docx}?{SAS_TOKEN}"
+        f"{CONTAINER_NAME}/{TRANSLATION_OUTPUT_PREFIX}/{encoded_target_file_name_docx}{SAS_TOKEN}"
     )
     target_url_pdf = (
         f"https://{AZURE_STORAGE_ACCOUNT}.blob.core.windows.net/"
-        f"{CONTAINER_NAME}/{TRANSLATION_OUTPUT_PREFIX}/{encoded_target_file_name_pdf}?{SAS_TOKEN}"
+        f"{CONTAINER_NAME}/{TRANSLATION_OUTPUT_PREFIX}/{encoded_target_file_name_pdf}{SAS_TOKEN}"
     )
 
-    return {'docx': target_url_docx, 'pdf': target_url_pdf}
+    return {"docx": target_url_docx, "pdf": target_url_pdf}
 
 
-def start_translation_job(file_name, source_url, target_url, glossary_url, metadata_results, glossary_content):
+def start_translation_job(
+    file_name, source_url, target_url, glossary_url, metadata_results, glossary_content
+):
     """
     Start the translation job for the document.
 
@@ -198,16 +213,21 @@ def start_translation_job(file_name, source_url, target_url, glossary_url, metad
         logging.error("Failed to start translation job")
         translation_status = "failed"
         update_file_record(
-            file_name, translation_date, translation_datetime, translation_status,
-            translated_zone_path, glossary_url, glossary_processing_status, glossary_content
+            file_name,
+            translation_date,
+            translation_datetime,
+            translation_status,
+            translated_zone_path,
+            glossary_url,
+            glossary_processing_status,
+            glossary_content,
         )
         return
 
     logging.info("Translation job started successfully")
 
     translated_document = check_translation_status(
-        operation_location,
-        get_target_file_name(file_name)
+        operation_location, get_target_file_name(file_name)
     )
 
     if not translated_document:
@@ -218,8 +238,14 @@ def start_translation_job(file_name, source_url, target_url, glossary_url, metad
         translation_status = "done"
 
     update_file_record(
-        file_name, translation_date, translation_datetime, translation_status,
-        translated_zone_path, glossary_url, glossary_processing_status, glossary_content
+        file_name,
+        translation_date,
+        translation_datetime,
+        translation_status,
+        translated_zone_path,
+        glossary_url,
+        glossary_processing_status,
+        glossary_content,
     )
 
 
@@ -234,11 +260,23 @@ def get_target_file_name(file_name):
         str: The target file name.
     """
     target_file_name_base = file_name.split(".")[0]
-    return f"{target_file_name_base}.docx" if file_name.endswith(".docx") else f"{target_file_name_base}.pdf"
+    return (
+        f"{target_file_name_base}.docx"
+        if file_name.endswith(".docx")
+        else f"{target_file_name_base}.pdf"
+    )
 
 
-def update_file_record(file_name, translation_date, translation_datetime, translation_status,
-                       translated_zone_path, glossary_url, glossary_processing_status, glossary_content):
+def update_file_record(
+    file_name,
+    translation_date,
+    translation_datetime,
+    translation_status,
+    translated_zone_path,
+    glossary_url,
+    glossary_processing_status,
+    glossary_content,
+):
     """
     Update the file record in the database.
 
