@@ -81,7 +81,7 @@ resource "azurerm_linux_function_app" "upload_function" {
     ]
   }
   provisioner "local-exec" {
-    command = "az functionapp deployment source config-zip --resource-group ${azurerm_resource_group.rg.name} --name ${local.name_prefix}-${var.function_app_name_upload} --src ${data.archive_file.document_upload_function_zip.output_path} --build-remote true "
+    command = "az functionapp deployment source config-zip --resource-group ${azurerm_resource_group.rg.name} --name ${local.name_prefix}-${var.function_app_name_upload}-${random_string.unique.result} --src ${data.archive_file.document_upload_function_zip.output_path} --build-remote true "
   }
 }
 
@@ -138,7 +138,7 @@ resource "azurerm_linux_function_app" "translate_function" {
     CONTAINER_NAME                   = var.storage_container_name
     BlobStorageConnectionString      = azurerm_storage_account.storage.primary_connection_string
     AzureWebJobsFeatureFlags         = "EnableWorkerIndexing"
-    TRANSLATE_ENDPOINT               = "https://${azurerm_cognitive_account.translator.custom_subdomain_name}.cognitiveservices.azure.com"
+    TRANSLATE_DOCUMENT_ENDPOINT      = "https://${azurerm_cognitive_account.translator.custom_subdomain_name}.cognitiveservices.azure.com"
     TRANSLATE_SUBSCRIPTION_KEY       = azurerm_cognitive_account.translator.primary_access_key
     AZURE_OPENAI_ENDPOINT            = azurerm_cognitive_account.openai.endpoint
     CHAT_COMPLETIONS_DEPLOYMENT_NAME = var.openai_deployments[0].name
@@ -150,11 +150,12 @@ resource "azurerm_linux_function_app" "translate_function" {
     DB_PASSWORD                      = random_password.db_password.result
     DB_SSLMODE                       = "require"
   }
+
   #   zip_deploy_file = "./document_translate_function.zip"
   tags = local.default_tags
 
   provisioner "local-exec" {
-    command = "az functionapp deployment source config-zip --resource-group ${azurerm_resource_group.rg.name} --name ${local.name_prefix}-${var.function_app_name_translate} --src ${data.archive_file.document_translate_function_zip.output_path} --build-remote true "
+    command = "az functionapp deployment source config-zip --resource-group ${azurerm_resource_group.rg.name} --name ${local.name_prefix}-${var.function_app_name_translate}-${random_string.unique.result} --src ${data.archive_file.document_translate_function_zip.output_path} --build-remote true "
   }
 
   identity {

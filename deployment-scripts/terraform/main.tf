@@ -30,10 +30,10 @@ resource "azurerm_storage_container" "container" {
 
 
 data "azurerm_storage_account_sas" "storage_sas_token" {
-  depends_on = [azurerm_storage_account.storage]
+  depends_on        = [azurerm_storage_account.storage]
   connection_string = azurerm_storage_account.storage.primary_connection_string
   https_only        = true
-  signed_version    = "2017-07-29"
+  signed_version    = "2022-11-02" # Updated version
 
   resource_types {
     service   = true
@@ -48,8 +48,9 @@ data "azurerm_storage_account_sas" "storage_sas_token" {
     file  = false
   }
 
-  start  = var.sas_start_date
-  expiry = var.sas_expiry_date
+  start  = formatdate("YYYY-MM-DD'T'hh:mm:ss'Z'", timestamp())
+  expiry = formatdate("YYYY-MM-DD'T'hh:mm:ss'Z'", timeadd(timestamp(), "8760h")) # 1 year from now
+
 
   permissions {
     read    = true

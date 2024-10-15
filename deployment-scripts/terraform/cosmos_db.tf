@@ -16,7 +16,7 @@ resource "azurerm_postgresql_flexible_server" "translator_db" {
   # Serverless Configuration
   sku_name   = "B_Standard_B1ms" # Serverless SKU
   storage_mb = 32768             # 32 GB minimum storage
-  version    = "13"              # PostgreSQL version
+  version    = "16"              # PostgreSQL version
 
   # Public Access Configuration
   public_network_access_enabled = true # Enable public access
@@ -52,3 +52,43 @@ resource "azurerm_postgresql_flexible_server_firewall_rule" "example" {
   server_id        = azurerm_postgresql_flexible_server.translator_db.id
 }
 
+
+# Output connection details
+output "postgres_host" {
+  value = azurerm_postgresql_flexible_server.translator_db.fqdn
+}
+
+output "postgres_port" {
+  value = 5432
+}
+
+output "postgres_database" {
+  value = azurerm_postgresql_flexible_server_database.citus_db.name
+}
+
+output "postgres_username" {
+  value = var.postgres_administrator_login
+}
+
+output "postgres_password" {
+  value     = random_password.db_password.result
+  sensitive = true
+}
+
+# Null resource to run the SQL script using psql
+# resource "null_resource" "run_sql_script" {
+#   depends_on = [azurerm_postgresql_flexible_server_database.citus_db]
+
+#   provisioner "local-exec" {
+#     command = <<EOT
+#       PGPASSWORD='${random_password.db_password.result}' psql \
+#       -h ${azurerm_postgresql_flexible_server.translator_db.fqdn} \
+#       -p 5432 \
+#       -d ${azurerm_postgresql_flexible_server_database.citus_db.name} \
+#       -U ${var.postgres_administrator_login} \
+#       -f db.sql
+#     EOT
+
+#     interpreter = ["bash", "-c"]
+#   }
+# }
