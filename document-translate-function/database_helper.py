@@ -154,7 +154,6 @@ class DatabaseHandler:
             "toLang": None,
             "exclusionTexts": [],
             "additionalGlossaryContentUrl": None,
-            "prompt_text": None
         }
 
         try:
@@ -162,11 +161,9 @@ class DatabaseHandler:
             with conn.cursor() as cursor:
                 query = sql.SQL(
                     """
-                    SELECT fromLanguage, toLanguage, exclusion_text, additional_glossary_content_url, prompt_text
-                    FROM file_translation_logs a
-                    join prompt_logs b
-                    on a.prompt_id = b.id
-                    WHERE file_name = %s                    
+                    SELECT fromLanguage, toLanguage, exclusion_text, additional_glossary_content_url
+                    FROM file_translation_logs 
+                    WHERE file_name = %s
                     """
                 )
                 cursor.execute(query, (file_name,))
@@ -176,10 +173,7 @@ class DatabaseHandler:
                     result["fromLang"] = row[0]
                     result["toLang"] = row[1]
                     result["additionalGlossaryContentUrl"] = row[3]
-                    result["prompt_text"] = row[4] if row[4] is not None else ""
-
                     exclusion_texts = row[2]
-                    exclusion_texts = row[2] if row[2] is not None else ""
                     result["exclusionTexts"] = [
                         text.strip() for text in re.split(r"\r\n|\n", exclusion_texts)
                     ]

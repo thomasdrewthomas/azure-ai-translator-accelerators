@@ -37,7 +37,7 @@ logging.basicConfig(
 
 @app.blob_trigger(
     arg_name="myblob",
-    path="documents/landing-zone/{name}",
+    path="translation-service/landing-zone/{name}",
     connection="BlobStorageConnectionString",
 )
 def az_ai_translate_document(myblob: func.InputStream):
@@ -98,20 +98,18 @@ def process_document(file_name):
     target_url = target_urls['docx'] if file_name.endswith(".docx") else target_urls['pdf']
     logging.info("Target URL: %s", target_url)
 
-    metadata_results = database_handler.fetch_metadata_text(file_name)
-    logging.info("Metadata results: %s", metadata_results)
-
-    exclusion_text = metadata_results["exclusionTexts"]
-    logging.info("Exclusion text: %s", exclusion_text)
-
-    system_prompt = metadata_results["prompt_text"]
-
-    response = process_file(file_name, source_url, system_prompt, FEW_SHOT_EXAMPLES, CHAT_PARAMETERS)
+    response = process_file(file_name, source_url, SYSTEM_PROMPT, FEW_SHOT_EXAMPLES, CHAT_PARAMETERS)
 
     parsed_response = parse_response(response)
     logging.info("Text extracted from file: %s", parsed_response)
 
     logging.info("File processing completed for: %s", file_name)
+
+    metadata_results = database_handler.fetch_metadata_text(file_name)
+    logging.info("Metadata results: %s", metadata_results)
+
+    exclusion_text = metadata_results["exclusionTexts"]
+    logging.info("Exclusion text: %s", exclusion_text)
 
     merged_response = parsed_response + exclusion_text
     logging.info("Merged response: %s", merged_response)

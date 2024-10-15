@@ -3,11 +3,11 @@
 # Manually managing azure-functions-worker may cause unexpected issues
 
 azure-functions
+requests~=2.32.3
 azure-storage-blob
 openai~=1.35.1
 azure-identity
 python-docx~=1.1.2
 PyMuPDF~=1.24.5
-psycopg2-binary==2.9.9
+psycopg2-binary
 pandas
-requests==2.32.3
